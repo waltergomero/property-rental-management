@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { Fragment } from "react/jsx-runtime";
+import Hero from '@/components/Hero'; 
+import InfoBoxes from '@/components/InfoBoxes';
 
 export default function Home() {
   return (
     <Fragment>
-      <h1 className="text-3xl font-bold">Home Page</h1>
-      <Link href="/properties/">Show Properties</Link>
+      <Hero />
+      <InfoBoxes />
     </Fragment>
   );
 }

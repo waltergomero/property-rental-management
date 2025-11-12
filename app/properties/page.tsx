@@ -1,13 +1,26 @@
-import Link from 'next/link'
-import React from 'react'
+import PropertySearchForm from '@/components/PropertySearchForm';
+import PropertyCard from '@/components/PropertyCard';
+import properties from '@/components/data/properties.json' // '@/components/Properties';
 
-const PropertiesPage = () => {
+const PropertiesPage = async () => {
   return (
     <>
-      <h1 className='text-2xl font-bold'>Properties Page</h1>
-      <Link href="/">Go to Home</Link>
-    </>
-  )
-}
+        <section className='bg-blue-700 py-4'>
+          <div className='max-w-7xl mx-auto px-4 flex flex-col items-start sm:px-6 lg:px-8'>
+            <PropertySearchForm />
+              {properties.map((property) => (
+                <PropertyCard key={property._id} property={property} />
+              ))}
+          </div>
+        </section>
 
-export default PropertiesPage
+      {/* <section className='bg-blue-700 py-4'>
+        <div className='max-w-7xl mx-auto px-4 flex flex-col items-start sm:px-6 lg:px-8'>
+          <PropertySearchForm />
+        </div>
+      </section>
+      <Properties /> */}
+    </>
+  );
+};
+export default PropertiesPage;
