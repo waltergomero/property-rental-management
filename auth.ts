@@ -1,8 +1,9 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
-//import { cookies } from 'next/headers';
+import connectDB from './config/database';
 import bcryptjs from "bcryptjs";
 import CredentialsProvider from 'next-auth/providers/credentials';
+import User from '@/models/User';
 
 declare module "next-auth" {
   interface User {
@@ -19,6 +20,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   pages: {
     signIn: '/signin',
     error: '/signin',
@@ -38,23 +40,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (credentials == null) return null;
 
         // Find user in database
-        const user = await prisma.user.findFirst({
-          where: {
-            email: credentials.email as string,
-          },
-        });
+        await connectDB();
+        const user = await User.findOne({
+          email: credentials.email as string,
+        }).lean() as { _id: any; name: string; email: string; password: string; isadmin?: boolean } | null;
 
-        // Check if user exists and if the password matches
-        if (
-          user &&
-          typeof user.password === 'string' &&
-          typeof credentials.password === 'string'
-        ) {
+        if (user) {
           const isMatch = await bcryptjs.compare(credentials.password as string, user.password);
           // If password is correct, return user
           if (isMatch) {
             return {
-              id: user.id,
+              id: user._id.toString(),
               name: user.name,
               email: user.email,
               isadmin: user.isadmin,
@@ -74,11 +70,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.isadmin = typeof token.isadmin === 'boolean' ? token.isadmin : undefined;
       session.user.name = token.name ?? undefined;
 
-      // If there is an update, set the user name
-      if (trigger === 'update') {
-        session.user.name = user.name ?? undefined;
-      }
-
       return session;
     },
     async jwt({ token, user, trigger, session }) {
@@ -86,21 +77,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.isadmin = user.isadmin;
-
-        // If user has no name then use the email
-        if (user.name === 'NO_NAME') {
-          token.name = user.email ? user.email.split('@')[0] : '';
-
-          // Update database to reflect the token name
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { name: token.name },
-          });
-        }
-
-        // if (trigger === 'signIn' || trigger === 'signUp') {
-        //   const cookiesObject = await cookies();
-        // }
+        token.name = user.name;
       }
 
       // Handle session updates
@@ -112,4 +89,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
-

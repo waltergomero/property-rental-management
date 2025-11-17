@@ -1,7 +1,6 @@
 import PropertySearchForm from '@/components/PropertySearchForm';
 import PropertyCard from '@/components/PropertyCard';
 import { fetchProperties } from '@/actions/properties';
-import { Property } from '@/types/property';
 import { Fragment } from 'react/jsx-runtime';
 
 const PropertiesPage = async () => {

@@ -1,0 +1,1 @@
+{"first_name":"first name","last_name":"last name","name":"Walter Gomero","image":"","email":"walter.gomero@gmail.com","password":"password","isadmin":true,"isactive":false,"bookmarks":[{"$oid":"66dbba982b6c582c1cc11cb3"}],"createdAt":{"$date":{"$numberLong":"1724554627978"}},"updatedAt":{"$date":{"$numberLong":"1726335583892"}},"__v":{"$numberInt":"3"}}
