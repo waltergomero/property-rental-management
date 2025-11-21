@@ -1,48 +1,38 @@
-//generate a form to add a new property with fields for address, price, and description using React and TypeScript
 'use client';
+import { useState, useEffect, ChangeEvent } from 'react';
 
-import React, { useState, ChangeEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { addProperty } from '@/actions/properties';
+const PropertyAddForm = () => {
+  const [mounted, setMounted] = useState(false);
+  const [fields, setFields] = useState({
+    type: '',
+    name: '',
+    description: '',
+    location: {
+      street: '',
+      city: '',
+      state: '',
+      zipcode: '',
+    },
+    beds: '',
+    baths: '',
+    square_feet: '',
+    amenities: [] as string[],
+    rates: {
+      weekly: '',
+      monthly: '',
+      nightly: '',
+    },
+    seller_info: {
+      name: '',
+      email: '',
+      phone: '',
+    },
+    images: [] as File[],
+  });
 
-interface PropertyFormData {
-    address: string;
-    price: number;
-    description: string;
-}
-const PropertyAddForm: React.FC = () => {
-    const [fields, setFields] = useState({
-        type: '',
-        name: '',
-        description: '',
-        location: {
-          street: '',
-          city: '',
-          state: '',
-          zipcode: '',
-        },
-        beds: '',
-        baths: '',
-        square_feet: '',
-        amenities: [] as string[],
-        rates: {
-          weekly: '',
-          monthly: '',
-          nightly: '',
-        },
-        seller_info: {
-          name: '',
-          email: '',
-          phone: '',
-        },
-        images: [] as File[],
-      });
-    const [formData, setFormData] = useState<PropertyFormData>({
-        address: '',
-        price: 0,
-        description: ''
-    });
-    const router = useRouter();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,33 +56,32 @@ const PropertyAddForm: React.FC = () => {
       }));
     }
   };
+  const handleAmenitiesChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
 
-    const handleAmenitiesChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { value, checked } = e.target;
+    // Clone the current array
+    const updatedAmenites = [...fields.amenities];
 
-        // Clone the current array
-        const updatedAmenites = [...fields.amenities];
+    if (checked) {
+      // Add value to array
+      updatedAmenites.push(value);
+    } else {
+      // Remove value from array
+      const index = updatedAmenites.indexOf(value);
 
-        if (checked) {
-        // Add value to array
-        updatedAmenites.push(value);
-        } else {
-        // Remove value from array
-        const index = updatedAmenites.indexOf(value);
+      if (index !== -1) {
+        updatedAmenites.splice(index, 1);
+      }
+    }
 
-        if (index !== -1) {
-            updatedAmenites.splice(index, 1);
-        }
-        }
+    // Update state with updated array
+    setFields((prevFields) => ({
+      ...prevFields,
+      amenities: updatedAmenites,
+    }));
+  };
 
-        // Update state with updated array
-        setFields((prevFields) => ({
-        ...prevFields,
-        amenities: updatedAmenites,
-        }));
-    };
-
-    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
 
     // Clone images array
@@ -112,103 +101,113 @@ const PropertyAddForm: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        const result =  await addProperty(fields);
-        // After successful submission, redirect or clear the form
-        router.push('/properties'); // Redirect to properties list page
-    };  
-    return (
-        <form className="space-y-6" onSubmit={handleSubmit}> 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                <label htmlFor='type' className='block text-gray-700 font-bold mb-2'>
-                    Property Type
-                </label>
-                <select
-                    id='type'
-                    name='type'
-                    className='border rounded w-full py-2 px-3'
-                    required
-                    value={fields.type}
-                    onChange={handleChange}
-                >
-                    <option value='Apartment'>Apartment</option>
-                    <option value='Condo'>Condo</option>
-                    <option value='House'>House</option>
-                    <option value='Cabin Or Cottage'>Cabin or Cottage</option>
-                    <option value='Room'>Room</option>
-                    <option value='Studio'>Studio</option>
-                    <option value='Other'>Other</option>
-                </select>
-                </div>
-                <div>
-                <label className='block text-gray-700 font-bold mb-2'>
-                Listing Name
-                </label>
-                <input
-                type='text'
-                id='name'
-                name='name'
-                className='border rounded w-full py-2 px-3 mb-2'
-                placeholder='eg. Beautiful Apartment In Miami'
-                required
-                value={fields.name}
-                onChange={handleChange}
-                />
-                </div>
-                <div>
-                <label className='block text-gray-700 font-bold mb-2'>Address:</label>
-                <input
-                    type='text'
-                    id='street'
-                    name='location.street'
-                    className='border rounded w-full py-2 px-3 mb-2'
-                    placeholder='Street'
-                    value={fields.location.street}
-                    onChange={handleChange}
-                />
-                </div>
-                <div>
-                <label className='block text-gray-700 font-bold mb-2'>City</label>
-                <input
-                    type='text'
-                    id='city'
-                    name='location.city'
-                    className='border rounded w-full py-2 px-3 mb-2'
-                    placeholder='City'
-                    required
-                    value={fields.location.city}
-                    onChange={handleChange}
-                />
-                </div>
-                <div>   
-                    <label className='block text-gray-700 font-bold mb-2'>State</label>
-                    <input
-                    type='text'
-                    id='state'
-                    name='location.state'
-                    className='border rounded w-full py-2 px-3 mb-2'
-                    placeholder='State'
-                    required
-                    value={fields.location.state}
-                    onChange={handleChange}
-                />
-                </div>
-                <div> 
-                    <label className='block text-gray-700 font-bold mb-2'>Zipcode</label>
-                              <input
-                    type='text'
-                    id='zipcode'
-                    name='location.zipcode'
-                    className='border rounded w-full py-2 px-3 mb-2'
-                    placeholder='Zipcode'
-                    value={fields.location.zipcode}
-                    onChange={handleChange}
-                />
-                </div>
-            </div>
+  return (
+    mounted && (
+      <form className="w-full max-w-lg"
+        action='/api/properties'
+        method='POST'
+        encType='multipart/form-data'
+      >
+        <h2 className='text-3xl text-center font-semibold mb-6'>
+          Add Property
+        </h2>
+
+        <div className='mb-4'>
+          <label htmlFor='type' className='block text-gray-700 font-bold mb-2'>
+            Property Type
+          </label>
+          <select
+            id='type'
+            name='type'
+            className='border rounded w-full py-2 px-3'
+            required
+            value={fields.type}
+            onChange={handleChange}
+          >
+            <option value='Apartment'>Apartment</option>
+            <option value='Condo'>Condo</option>
+            <option value='House'>House</option>
+            <option value='Cabin Or Cottage'>Cabin or Cottage</option>
+            <option value='Room'>Room</option>
+            <option value='Studio'>Studio</option>
+            <option value='Other'>Other</option>
+          </select>
+        </div>
+        <div className='mb-4'>
+          <label className='block text-gray-700 font-bold mb-2'>
+            Listing Name
+          </label>
+          <input
+            type='text'
+            id='name'
+            name='name'
+            className='border rounded w-full py-2 px-3 mb-2'
+            placeholder='eg. Beautiful Apartment In Miami'
+            required
+            value={fields.name}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='mb-4'>
+          <label
+            htmlFor='description'
+            className='block text-gray-700 font-bold mb-2'
+          >
+            Description
+          </label>
+          <textarea
+            id='description'
+            name='description'
+            className='border rounded w-full py-2 px-3'
+            rows='4'
+            placeholder='Add an optional description of your property'
+            value={fields.description}
+            onChange={handleChange}
+          ></textarea>
+        </div>
+
+        <div className='mb-4 bg-blue-50 p-4'>
+          <label className='block text-gray-700 font-bold mb-2'>Location</label>
+          <input
+            type='text'
+            id='street'
+            name='location.street'
+            className='border rounded w-full py-2 px-3 mb-2'
+            placeholder='Street'
+            value={fields.location.street}
+            onChange={handleChange}
+          />
+          <input
+            type='text'
+            id='city'
+            name='location.city'
+            className='border rounded w-full py-2 px-3 mb-2'
+            placeholder='City'
+            required
+            value={fields.location.city}
+            onChange={handleChange}
+          />
+          <input
+            type='text'
+            id='state'
+            name='location.state'
+            className='border rounded w-full py-2 px-3 mb-2'
+            placeholder='State'
+            required
+            value={fields.location.state}
+            onChange={handleChange}
+          />
+          <input
+            type='text'
+            id='zipcode'
+            name='location.zipcode'
+            className='border rounded w-full py-2 px-3 mb-2'
+            placeholder='Zipcode'
+            value={fields.location.zipcode}
+            onChange={handleChange}
+          />
+        </div>
+
         <div className='mb-4 flex flex-wrap'>
           <div className='w-full sm:w-1/3 pr-2'>
             <label
@@ -262,7 +261,8 @@ const PropertyAddForm: React.FC = () => {
             />
           </div>
         </div>
-<div className='mb-4'>
+
+        <div className='mb-4'>
           <label className='block text-gray-700 font-bold mb-2'>
             Amenities
           </label>
@@ -453,14 +453,14 @@ const PropertyAddForm: React.FC = () => {
             </div>
           </div>
         </div>
-        <div>
-        <label className='block text-gray-700 font-bold mt-8'>
+
+        <div className='mb-4 bg-blue-50 p-4'>
+          <label className='block text-gray-700 font-bold mb-2'>
             Rates (Leave blank if not applicable)
           </label>
-        </div>
-         <div className='mb-4 flex flex-wrap'>
-          <div className='w-full sm:w-1/3 pr-2'>
-            <label htmlFor='weekly_rate' className='mr-2'>
+          <div className='flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4'>
+            <div className='flex items-center'>
+              <label htmlFor='weekly_rate' className='mr-2'>
                 Weekly
               </label>
               <input
@@ -471,9 +471,9 @@ const PropertyAddForm: React.FC = () => {
                 value={fields.rates.weekly}
                 onChange={handleChange}
               />
-          </div>
-          <div className='w-full sm:w-1/3 pr-2'>
-             <label htmlFor='monthly_rate' className='mr-2'>
+            </div>
+            <div className='flex items-center'>
+              <label htmlFor='monthly_rate' className='mr-2'>
                 Monthly
               </label>
               <input
@@ -484,9 +484,9 @@ const PropertyAddForm: React.FC = () => {
                 value={fields.rates.monthly}
                 onChange={handleChange}
               />
-          </div>
-          <div className='w-full sm:w-1/3 pr-2'>
-             <label htmlFor='nightly_rate' className='mr-2'>
+            </div>
+            <div className='flex items-center'>
+              <label htmlFor='nightly_rate' className='mr-2'>
                 Nightly
               </label>
               <input
@@ -497,62 +497,20 @@ const PropertyAddForm: React.FC = () => {
                 value={fields.rates.nightly}
                 onChange={handleChange}
               />
+            </div>
           </div>
         </div>
-        <div className='mb-4 flex flex-wrap'>
-          <div className='w-full sm:w-1/3 pr-2'>
-            <label
-            htmlFor='seller_name'
-            className='block text-gray-700 font-bold mb-2'
-          >
-            Seller Name
-          </label>
-          <input
-            type='text'
-            id='seller_name'
-            name='seller_info.name'
-            className='border rounded w-full py-2 px-3'
-            placeholder='Name'
-            value={fields.seller_info.name}
-            onChange={handleChange}
-          />
-          </div>
-        <div className='w-full sm:w-1/3 pr-2'>
-        <label
-            htmlFor='seller_email'
-            className='block text-gray-700 font-bold mb-2'
-          >
-            Seller Email
-          </label>
-          <input
-            type='email'
-            id='seller_email'
-            name='seller_info.email'
-            className='border rounded w-full py-2 px-3'
-            placeholder='Email address'
-            required
-            value={fields.seller_info.email}
-            onChange={handleChange}
-          />
-            </div>
-        <div className='w-full sm:w-1/3 pr-2'>
-          <label
-            htmlFor='seller_phone'
-            className='block text-gray-700 font-bold mb-2'
-          >
-            Seller Phone
-          </label>
-          <input
-            type='tel'
-            id='seller_phone'
-            name='seller_info.phone'
-            className='border rounded w-full py-2 px-3'
-            placeholder='Phone'
-            value={fields.seller_info.phone}
-            onChange={handleChange}
-          />
-            </div>
+
+        <div className='mb-4'>
+          
         </div>
+        <div className='mb-4'>
+          
+        </div>
+        <div className='mb-4'>
+
+        </div>
+
         <div className='mb-4'>
           <label
             htmlFor='images'
@@ -571,15 +529,17 @@ const PropertyAddForm: React.FC = () => {
             required
           />
         </div>
-            <div>
-                <button
-                    type="submit"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" >
-                    Add Property
-                </button>
-            </div>
-        </form>
-    );
-};
 
-export default PropertyAddForm; 
+        <div>
+          <button
+            className='bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline'
+            type='submit'
+          >
+            Add Property
+          </button>
+        </div>
+      </form>
+    )
+  );
+};
+export default PropertyAddForm;

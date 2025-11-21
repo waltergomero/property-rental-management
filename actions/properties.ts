@@ -19,6 +19,63 @@ function convertToPlainProperty(property: any): PlainProperty {
   };
 }
 
+/** 
+ * add property actions here 
+ * */
+ export async function addProperty(data: any) {
+  try {
+    await connectDB();
+    console.log('Form Data Received:', data);
+
+    // Handle both FormData and plain object
+    const isFormData = data instanceof FormData;
+    
+    const amenities = isFormData 
+      ? data.getAll('amenities') as string[]
+      : data.amenities || [];
+      
+    const images = isFormData
+      ? (data.getAll('images') as string[]).filter((img: string) => img.trim() !== '')
+      : data.images || [];
+                      
+    const newProperty = new Property({
+      type: isFormData ? data.get('type') as string : data.type,
+      name: isFormData ? data.get('name') as string : data.name,
+      description: isFormData ? data.get('description') as string : data.description,
+      location: {
+        street: isFormData ? data.get('street') as string : data.location.street,
+        city: isFormData ? data.get('city') as string : data.location.city,
+        state: isFormData ? data.get('state') as string : data.location.state,
+        zipcode: isFormData ? data.get('zipcode') as string : data.location.zipcode,
+      },
+      beds: isFormData ? Number(data.get('bedrooms')) : Number(data.beds),
+      baths: isFormData ? Number(data.get('bathrooms')) : Number(data.baths),
+      square_feet: isFormData ? Number(data.get('square_feet')) : Number(data.square_feet),
+      amenities,
+      rates: {
+        nightly: isFormData ? Number(data.get('rate_nightly')) : Number(data.rates.nightly),
+        weekly: isFormData ? Number(data.get('rate_weekly')) : Number(data.rates.weekly),
+        monthly: isFormData ? Number(data.get('rate_monthly')) : Number(data.rates.monthly),
+      },
+      seller_info: {
+        name: isFormData ? data.get('seller_info.name') : data.seller_info.name,
+        email: isFormData ? data.get('seller_info.email') : data.seller_info.email,
+        phone: isFormData ? data.get('seller_info.phone') : data.seller_info.phone,
+      },
+      owner: isFormData ? data.get('ownerid') as string : data.owner,
+    });
+    console.log('New Property to be saved:', newProperty);
+
+    //await newProperty.save();
+    revalidatePath('/properties');
+    revalidatePath('/');
+  }
+  catch (error) {
+    console.error('Error adding property:', error);
+  }
+}
+
+
 /**
  * Fetch all properties from the database
  * @returns Object containing properties array and total count
