@@ -18,7 +18,7 @@ const SocialButtons = () => {
     handleSignOut();
   }, []);
   
-  const handleClick = async (event, provider) => {
+  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>, provider: string) => {
     event.preventDefault();
 
     try {
@@ -26,13 +26,14 @@ const SocialButtons = () => {
      console.log("result: ", result)
         
      } catch (err) {
-      toast.error("Authentication error: " + err.message);
+      const message = err instanceof Error ? err.message : 'Unknown error occurred';
+      toast.error("Authentication error: " + message);
      }
    };
 
 
   return (
-    <form onSubmit={handleClick} >
+    <form onSubmit={(e) => e.preventDefault()} >
     <div className='flex items-center justify-center w-full gap-x-4'>
       <button type='submit' 
       className='flex w-full justify-center rounded p-1 text-sm text-black border' 

@@ -5,11 +5,7 @@ import React, { useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { addProperty } from '@/actions/properties';
 
-interface PropertyFormData {
-    address: string;
-    price: number;
-    description: string;
-}
+
 const PropertyAddForm: React.FC = () => {
     const [fields, setFields] = useState({
         type: '',
@@ -21,14 +17,14 @@ const PropertyAddForm: React.FC = () => {
           state: '',
           zipcode: '',
         },
-        beds: '',
-        baths: '',
-        square_feet: '',
+        beds: 0,
+        baths: 0,
+        square_feet: 0,
         amenities: [] as string[],
         rates: {
-          weekly: '',
-          monthly: '',
-          nightly: '',
+          weekly: 0,
+          monthly: 0,
+          nightly: 0,
         },
         seller_info: {
           name: '',
@@ -36,12 +32,11 @@ const PropertyAddForm: React.FC = () => {
           phone: '',
         },
         images: [] as File[],
+        _id: '',
+        owner: '',
+        is_featured: false,
       });
-    const [formData, setFormData] = useState<PropertyFormData>({
-        address: '',
-        price: 0,
-        description: ''
-    });
+
     const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -112,13 +107,17 @@ const PropertyAddForm: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        const result =  await addProperty(fields);
-        // After successful submission, redirect or clear the form
-        router.push('/properties'); // Redirect to properties list page
-    };  
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+      try {
+        const result = await addProperty(fields);
+        router.push('/properties');
+      } catch (error) {
+        console.error('Failed to add property:', error);
+        // Show error message to user
+      }
+    };
+
     return (
         <form className="space-y-6" onSubmit={handleSubmit}> 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +143,7 @@ const PropertyAddForm: React.FC = () => {
                 </select>
                 </div>
                 <div>
-                <label className='block text-gray-700 font-bold mb-2'>
+                <label htmlFor='name' className='block text-gray-700 font-bold mb-2'>
                 Listing Name
                 </label>
                 <input
@@ -159,7 +158,7 @@ const PropertyAddForm: React.FC = () => {
                 />
                 </div>
                 <div>
-                <label className='block text-gray-700 font-bold mb-2'>Address:</label>
+                <label htmlFor='street' className='block text-gray-700 font-bold mb-2'>Address:</label>
                 <input
                     type='text'
                     id='street'
@@ -171,7 +170,7 @@ const PropertyAddForm: React.FC = () => {
                 />
                 </div>
                 <div>
-                <label className='block text-gray-700 font-bold mb-2'>City</label>
+                <label htmlFor='city' className='block text-gray-700 font-bold mb-2'>City</label>
                 <input
                     type='text'
                     id='city'
@@ -184,7 +183,7 @@ const PropertyAddForm: React.FC = () => {
                 />
                 </div>
                 <div>   
-                    <label className='block text-gray-700 font-bold mb-2'>State</label>
+                    <label htmlFor='state' className='block text-gray-700 font-bold mb-2'>State</label>
                     <input
                     type='text'
                     id='state'
@@ -197,7 +196,7 @@ const PropertyAddForm: React.FC = () => {
                 />
                 </div>
                 <div> 
-                    <label className='block text-gray-700 font-bold mb-2'>Zipcode</label>
+                    <label htmlFor='zipcode' className='block text-gray-700 font-bold mb-2'>Zipcode</label>
                               <input
                     type='text'
                     id='zipcode'
@@ -262,7 +261,7 @@ const PropertyAddForm: React.FC = () => {
             />
           </div>
         </div>
-<div className='mb-4'>
+        <div className='mb-4'>
           <label className='block text-gray-700 font-bold mb-2'>
             Amenities
           </label>
@@ -453,12 +452,24 @@ const PropertyAddForm: React.FC = () => {
             </div>
           </div>
         </div>
-        <div>
-        <label className='block text-gray-700 font-bold mt-8'>
+        <div className='bg-blue-50 p-2 rounded'>
+        <div className='block text-gray-700 font-bold mt-1 mb-2'>
             Rates (Leave blank if not applicable)
-          </label>
-        </div>
+          </div>   
          <div className='mb-4 flex flex-wrap'>
+          <div className='w-full sm:w-1/3 pr-2'>
+             <label htmlFor='nightly_rate' className='mr-2'>
+                Nightly
+              </label>
+              <input
+                type='number'
+                id='nightly_rate'
+                name='rates.nightly'
+                className='border rounded w-full py-2 px-3'
+                value={fields.rates.nightly}
+                onChange={handleChange}
+              />
+          </div>
           <div className='w-full sm:w-1/3 pr-2'>
             <label htmlFor='weekly_rate' className='mr-2'>
                 Weekly
@@ -485,20 +496,8 @@ const PropertyAddForm: React.FC = () => {
                 onChange={handleChange}
               />
           </div>
-          <div className='w-full sm:w-1/3 pr-2'>
-             <label htmlFor='nightly_rate' className='mr-2'>
-                Nightly
-              </label>
-              <input
-                type='number'
-                id='nightly_rate'
-                name='rates.nightly'
-                className='border rounded w-full py-2 px-3'
-                value={fields.rates.nightly}
-                onChange={handleChange}
-              />
-          </div>
         </div>
+            </div>
         <div className='mb-4 flex flex-wrap'>
           <div className='w-full sm:w-1/3 pr-2'>
             <label

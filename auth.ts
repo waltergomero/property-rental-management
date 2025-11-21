@@ -14,6 +14,7 @@ declare module "next-auth" {
       id: string;
       name?: string;
       email?: string;
+      image?: string | null;
       isadmin?: boolean;
     };
   }
@@ -43,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
         const user = await User.findOne({
           email: credentials.email as string,
-        }).lean() as { _id: any; name: string; email: string; password: string; isadmin?: boolean } | null;
+        }).lean() as { _id: any; name: string; email: string; password: string; isadmin?: boolean; image?: string } | null;
 
         if (user) {
           const isMatch = await bcryptjs.compare(credentials.password as string, user.password);
@@ -54,6 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: user.name,
               email: user.email,
               isadmin: user.isadmin,
+              image: user.image || null,
             };
           }
         }
@@ -64,11 +66,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async session({ session, user, trigger, token }) {
+    async session({ session, token }) {
       // Set the user ID from the token
       session.user.id = token.sub ?? '';
       session.user.isadmin = typeof token.isadmin === 'boolean' ? token.isadmin : undefined;
       session.user.name = token.name ?? undefined;
+      session.user.image = token.picture ?? null;
 
       return session;
     },

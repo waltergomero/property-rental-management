@@ -6,13 +6,12 @@ import Link from 'next/link';
 import logo from '@/assets/images/logo-white.png';
 import profileDefault from '@/assets/images/profile.png';
 import { FaGoogle } from 'react-icons/fa';
-import { signIn, signOut, useSession, getProviders } from 'next-auth/react';
-import UnreadMessageCount from './UnreadMessageCount';
-import {User} from "@/types/user"
+import { useSession } from 'next-auth/react';
 
 const Navbar = () => {
-  //const { data: session } = useSession();
-  const profileImage =  null; //session?.user?.image || null;
+  const { data: session } = useSession();
+  console.log("Navbar session: ", session);
+  const profileImage =  session?.user?.image || null;
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -31,7 +30,7 @@ const Navbar = () => {
               id='mobile-dropdown-button'
               className='relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white'
               aria-controls='mobile-menu'
-              aria-expanded={isMobileMenuOpen}
+              aria-expanded={isMobileMenuOpen ? 'true' : 'false'}
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             >
               <span className='absolute -inset-0.5'></span>

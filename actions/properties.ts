@@ -3,26 +3,13 @@
 import connectDB from '@/config/database';
 import Property from '@/models/Property';
 import { revalidatePath } from 'next/cache';
-import { PlainProperty } from '@/types/property';
+import {IProperty} from '@/types/property';
 
-
-/**
- * Convert MongoDB property document to plain object
- */
-function convertToPlainProperty(property: any): PlainProperty {
-  return {
-    ...property,
-    _id: property._id.toString(),
-    owner: property.owner.toString(),
-    createdAt: property.createdAt?.toString(),
-    updatedAt: property.updatedAt?.toString(),
-  };
-}
 
 /** 
  * add property actions here 
  * */
- export async function addProperty(data: any) {
+ export async function addProperty(data: FormData | IProperty) {
   try {
     await connectDB();
     console.log('Form Data Received:', data);
@@ -51,7 +38,7 @@ function convertToPlainProperty(property: any): PlainProperty {
       beds: isFormData ? Number(data.get('bedrooms')) : Number(data.beds),
       baths: isFormData ? Number(data.get('bathrooms')) : Number(data.baths),
       square_feet: isFormData ? Number(data.get('square_feet')) : Number(data.square_feet),
-      amenities,
+      amenities: amenities,
       rates: {
         nightly: isFormData ? Number(data.get('rate_nightly')) : Number(data.rates.nightly),
         weekly: isFormData ? Number(data.get('rate_weekly')) : Number(data.rates.weekly),
@@ -89,8 +76,7 @@ export async function fetchProperties() {
       .sort({ createdAt: -1 });
 
     // Convert MongoDB documents to plain objects
-    const plainProperties = properties.map((property) => convertToPlainProperty(property));
-
+    const plainProperties = properties.map((property) => (property));
     return {
       properties: plainProperties,
       total: plainProperties.length,
@@ -119,8 +105,8 @@ export async function fetchPropertyById(id: string) {
       return null;
     }
 
-    // Convert MongoDB document to plain object
-    return convertToPlainProperty(property);
+    return property || null;
+
   } catch (error) {
     console.error(`Error fetching property ${id}:`, error);
     return null;
