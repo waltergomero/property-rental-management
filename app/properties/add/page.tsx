@@ -2,7 +2,7 @@ import PropertyAddForm from '@/components/PropertyAddForm';
 
 const PropertyAddPage = () => {
   return (
-    <section className='bg-blue-50'>
+    <section>
       <div className='container m-auto  py-10'>
         <h2 className='text-2xl text-center font-semibold mb-6'>
           Add Property

@@ -21,6 +21,7 @@ import { signIn, signOut } from '@/auth';
 import connectDB from '@/config/database';
 import User from '@/models/User';
 import { AuthError } from 'next-auth';
+import { convertToPlainObject } from '@/lib/utils';
 
 // Types for better type safety
 interface ActionResult {
@@ -111,15 +112,28 @@ export async function getAllUsers({
         }
       : {};
 
-    const [data, dataCount] = await Promise.all([
+    const [users, dataCount] = await Promise.all([
       User.find(queryFilter)
         .sort({ createdAt: -1 })
         .limit(limit)
         .skip((page - 1) * limit)
-        .select('id first_name last_name name email isadmin isactive createdAt updatedAt')
+        .select('first_name last_name name email isadmin isactive createdAt updatedAt')
         .lean(),
       User.countDocuments(queryFilter),
     ]);
+
+    // Serialize data for client components
+    const data = users.map((user: any) => ({
+      _id: user._id.toString(),
+      first_name: user.first_name,
+      last_name: user.last_name,
+      name: user.name,
+      email: user.email,
+      isadmin: user.isadmin,
+      isactive: user.isactive,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    }));
 
     return {
       data,
@@ -294,25 +308,14 @@ export async function getUserById(userId: string) {
   try {
     await connectDB();
     const user = await User.findOne({
-      where: { id: userId },
-      select: {
-        id: true,
-        first_name: true,
-        last_name: true,
-        name: true,
-        email: true,
-        isadmin: true,
-        isactive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      _id: userId,
     });
 
     if (!user) {
       throw new Error('User not found');
     }
-
-    return user;
+    console.log('Fetched User:', user);
+    return convertToPlainObject(user);
   } catch (error) {
     console.error('Error fetching user:', error);
     throw error;
@@ -322,18 +325,32 @@ export async function getUserById(userId: string) {
 /**
  * Delete user by ID
  */
-export async function deleteUser(id: string): Promise<void> {
+export async function deleteUser(id: string): Promise<ActionResult> {
   noStore();
 
   try {
     await connectDB();
-    await User.findByIdAndDelete(id);
+    const result = await User.deleteOne({ _id: id });
+    
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: 'User not found or already deleted',
+      };
+    }
     
     revalidatePath('/admin/users');
-    redirect('/admin/users');
+    
+    return {
+      success: true,
+      message: 'User deleted successfully',
+    };
   } catch (error) {
     console.error('Error deleting user:', error);
-    throw new Error('Failed to delete user');
+    return {
+      success: false,
+      message: 'Failed to delete user',
+    };
   }
 }
 
@@ -360,12 +377,10 @@ export async function createNewUser(
     }
 
     const { first_name, last_name, email, password, isadmin } = validatedFields.data;
-
+    console.log('Validated Fields:', email);
     // Check if user already exists
-    const existingUser = await User.findOne({
-      where: { email },
-      select: { id: true },
-    });
+    const existingUser = await User.findOne({ email });
+    console.log('Existing User:', existingUser);
 
     if (existingUser) {
       return {
@@ -378,30 +393,23 @@ export async function createNewUser(
     const hashedPassword = await hashPassword(password);
 
     const newUser = await User.create({
-      data: {
-        first_name,
-        last_name,
-        name: `${first_name} ${last_name}`,
-        email,
-        password: hashedPassword,
-        isadmin,
-        isactive: true,
-      },
-      select: {
-        id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        isadmin: true,
-      },
+      first_name,
+      last_name,
+      name: `${first_name} ${last_name}`,
+      email,
+      password: hashedPassword,
+      isadmin,
+      isactive: true,
     });
 
+    console.log('User created successfully:', newUser._id);
+    
     return { 
       success: true, 
       message: 'User created successfully',
-      data: newUser,
     };
   } catch (error) {
+    console.log('Error creating user:', error);
     return handleActionError(error, 'Failed to create user');
   }
 }
@@ -434,10 +442,7 @@ export async function updateUser(
     const { first_name, last_name, email, isactive, isadmin } = validatedFields.data;
 
     // Check if user exists
-    const existingUser = await User.findOne({ 
-      where: { id: userId },
-      select: { id: true, email: true },
-    });
+    const existingUser = await User.findOne({ email });
 
     if (!existingUser) {
       return { 
@@ -447,61 +452,32 @@ export async function updateUser(
     }
 
     // Check if email is already taken by another user
-    if (email !== existingUser.email) {
-      const emailTaken = await User.findOne({
-        where: { 
-          email,
-          NOT: { id: userId },
-        },
-        select: { id: true },
-      });
-
-      if (emailTaken) {
-        return { 
-          success: false, 
-          message: `Email ${email} is already taken by another user` 
-        };
-      }
+    if (existingUser._id.toString() !== userId) {
+      return {
+        success: false,
+        message: `Email "${email}" is already taken by another user`,
+      };
     }
 
     // Prepare update data
-    const updateData: {
-      first_name: string;
-      last_name: string;
-      name: string;
-      email: string;
-      isadmin: boolean;
-      isactive: boolean;
-      password?: string;
-    } = {
-      first_name,
-      last_name,
-      name: `${first_name} ${last_name}`,
-      email,
-      isadmin: isadmin ?? false,
-      isactive: isactive ?? true,
-    };
-
+   let newPssword = '';
     // Hash new password if provided
     if (password && password.trim()) {
-      updateData.password = await hashPassword(password);
+      newPssword = await hashPassword(password);
     }
 
     // Update user
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      updateData,
-      { 
-        new: true,
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-          isadmin: true,
-          isactive: true,
-        }
-      }
+      {
+        first_name,
+        last_name,
+        name: `${first_name} ${last_name}`,
+        email,
+        isadmin: isadmin ?? false,
+        isactive: isactive ?? true,
+        ...(newPssword && { password: newPssword }),
+      },
     );
 
     return {

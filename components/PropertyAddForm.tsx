@@ -165,6 +165,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name='location.street'
                     className='border rounded w-full py-2 px-3 mb-2'
                     placeholder='Street'
+                    required
                     value={fields.location.street}
                     onChange={handleChange}
                 />
@@ -203,6 +204,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name='location.zipcode'
                     className='border rounded w-full py-2 px-3 mb-2'
                     placeholder='Zipcode'
+                    required
                     value={fields.location.zipcode}
                     onChange={handleChange}
                 />

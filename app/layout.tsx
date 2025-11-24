@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import { auth } from "@/auth";
+import { ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +32,25 @@ export default async function RootLayout({
   
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
       <Providers session={session}>
         <Navbar />
-        {children}
+        <main className="grow flex flex-col">
+          {children}
+        </main>
         <Footer />
+        <ToastContainer
+          theme="colored"
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          toastClassName="text-md"
+          pauseOnFocusLoss
+          pauseOnHover
+        />
       </Providers>
       </body>
     </html>

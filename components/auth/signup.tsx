@@ -34,7 +34,7 @@ const SignIn = () => {
     }
   };
     return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="flex items-center justify-center min-h-[600px]">
       <div className="max-w-md w-full bg-white p-8 rounded shadow">
         <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>    
         
@@ -113,7 +113,7 @@ const SignIn = () => {
         </form>
         <div className="mt-4 text-sm text-center text-gray-600">
           Do you have an account?{' '}
-          <a href="/auth/signin" className="text-indigo-600 hover:text-indigo-500 font-medium">
+          <a href="/signin" className="text-indigo-600 hover:text-indigo-500 font-medium">
             Sign In <ArrowRightIcon className="inline h-4 w-4 ml-1" />
           </a>
         </div>

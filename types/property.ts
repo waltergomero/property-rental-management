@@ -1,8 +1,42 @@
 import { Types } from 'mongoose';
 
-export interface IProperty {
+// For MongoDB documents (server-side)
+export interface IPropertyDocument {
   _id: Types.ObjectId;
   owner: Types.ObjectId;
+  type: string;
+  name: string;
+  description?: string;
+  images: string[];
+  amenities: string[];
+  beds: number;
+  baths: number;
+  square_feet: number;
+  rates: {
+    nightly?: number;
+    weekly?: number;
+    monthly?: number;
+  };
+  location: {
+    street: string;
+    zipcode: string;
+    city: string;
+    state: string;
+  };
+  seller_info: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  is_featured: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// For client components (serializable)
+export interface IProperty {
+  _id: string;
+  owner: string;
   type: string;
   name: string;
   description?: string;

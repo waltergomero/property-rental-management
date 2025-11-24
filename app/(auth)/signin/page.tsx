@@ -19,7 +19,7 @@ const SignInPage = async (props: SignInPageProps) => {
 
   
     return (
-        <div className="auth-box overflow-hidden align-items-center d-flex" style={{ minHeight: '100vh' }}>
+        <div className="auth-box overflow-hidden align-items-center d-flex">
             <SignIn />
         </div>
     )

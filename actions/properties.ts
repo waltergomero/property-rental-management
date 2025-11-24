@@ -3,8 +3,21 @@
 import connectDB from '@/config/database';
 import Property from '@/models/Property';
 import { revalidatePath } from 'next/cache';
-import {IProperty} from '@/types/property';
+import { IProperty, IPropertyDocument } from '@/types/property';
+import { auth } from '@/auth';
 
+
+
+/**
+ * Convert MongoDB document to plain object with serializable values
+ */
+function convertToPlainProperty(property: any): IProperty {
+  return {
+    ...property,
+    _id: property._id.toString(),
+    owner: property.owner.toString(),
+  };
+}
 
 /** 
  * add property actions here 
@@ -12,6 +25,12 @@ import {IProperty} from '@/types/property';
  export async function addProperty(data: FormData | IProperty) {
   try {
     await connectDB();
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+    const ownerId = session.user.id;
+
     console.log('Form Data Received:', data);
 
     // Handle both FormData and plain object
@@ -49,11 +68,11 @@ import {IProperty} from '@/types/property';
         email: isFormData ? data.get('seller_info.email') : data.seller_info.email,
         phone: isFormData ? data.get('seller_info.phone') : data.seller_info.phone,
       },
-      owner: isFormData ? data.get('ownerid') as string : data.owner,
+      owner: isFormData ? ownerId : data.owner || ownerId,
     });
     console.log('New Property to be saved:', newProperty);
 
-    //await newProperty.save();
+    await newProperty.save();
     revalidatePath('/properties');
     revalidatePath('/');
   }
@@ -76,7 +95,7 @@ export async function fetchProperties() {
       .sort({ createdAt: -1 });
 
     // Convert MongoDB documents to plain objects
-    const plainProperties = properties.map((property) => (property));
+    const plainProperties = properties.map((property) => convertToPlainProperty(property));
     return {
       properties: plainProperties,
       total: plainProperties.length,
@@ -105,7 +124,7 @@ export async function fetchPropertyById(id: string) {
       return null;
     }
 
-    return property || null;
+    return convertToPlainProperty(property);
 
   } catch (error) {
     console.error(`Error fetching property ${id}:`, error);

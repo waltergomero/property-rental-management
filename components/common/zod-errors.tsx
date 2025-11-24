@@ -7,7 +7,7 @@ interface ZodErrorsProps {
 export function ZodErrors({ error }: ZodErrorsProps) {
     if (!error) return null;
     return error.map((err: string, index: number) => (
-      <div key={index} className="text-danger">
+      <div key={index} className="text-sm text-red-600">
         {err}
       </div>
     ));
